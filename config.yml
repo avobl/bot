@@ -1,0 +1,22 @@
+todoist:
+  devBaseURL: "https://api.todoist.com/sync/v8"
+  authzBaseURL: "https://todoist.com/oauth/authorize"
+  app:
+    clientID: "b9684fe66099403bb0f859d14bdb98c7"
+    clientSecret: ""
+    redirectURL: ""
+    scopes: ["data:read"]
+
+sqlite:
+  dbname: "./tg-bot.db"
+  maxIdleConns: 5
+  maxOpenConns: 10
+
+server:
+  host: "localhost"
+  basePath: "/bot"
+  port: ":8080"
+
+telegram:
+  # will be retrieved from env
+  token: ""

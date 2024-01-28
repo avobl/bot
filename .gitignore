@@ -15,8 +15,10 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
- vendor/
- .idea
+vendor/
+.idea
+.env
+tg-bot.db
 
 # Go workspace file
 go.work
