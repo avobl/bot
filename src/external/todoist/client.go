@@ -17,13 +17,13 @@ const (
 
 // Client is a http client for Todoist API
 type Client struct {
-	client       http.Client
+	client       *http.Client
 	devBaseURL   string
 	authzBaseURL string
 }
 
 // NewClient is a constructor for Client
-func NewClient(client http.Client, devBaseURL, authzBaseURL string) *Client {
+func NewClient(client *http.Client, devBaseURL, authzBaseURL string) *Client {
 	return &Client{
 		client:       client,
 		devBaseURL:   devBaseURL,

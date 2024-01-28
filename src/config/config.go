@@ -15,11 +15,11 @@ const (
 )
 
 // New returns new Config
-func New() (*Config, error) {
+func New(filepath string) (*Config, error) {
 	k := koanf.New(".")
 
 	// load yml config
-	if err := k.Load(file.Provider("./config.yml"), yaml.Parser()); err != nil {
+	if err := k.Load(file.Provider(filepath), yaml.Parser()); err != nil {
 		return nil, fmt.Errorf("loading yaml config: %w", err)
 	}
 
@@ -33,7 +33,7 @@ func New() (*Config, error) {
 	}
 
 	var conf Config
-	if err := k.Unmarshal("", &conf); err != nil {
+	if err = k.Unmarshal("", &conf); err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
