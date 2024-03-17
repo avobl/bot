@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/avobl/bot/src/db/sqlite"
+
+	"github.com/avobl/bot/src/db"
 )
 
 var (
@@ -14,7 +15,7 @@ var (
 
 // TokenRepository is a repository for user's oauth2 token for Todoist
 type TokenRepository struct {
-	db sqlite.Provider
+	db db.Provider
 }
 
 // Token represents user's oauth2 token for Todoist
@@ -25,7 +26,7 @@ type Token struct {
 }
 
 // NewTokenRepository returns new TokenRepository
-func NewTokenRepository(db sqlite.Provider) *TokenRepository {
+func NewTokenRepository(db db.Provider) *TokenRepository {
 	return &TokenRepository{db: db}
 }
 
@@ -38,7 +39,7 @@ func (r *TokenRepository) GetByUser(ctx context.Context, userID int) (Token, err
 	row := r.db.QueryRowContext(ctx, query, userID)
 	err := row.Scan(&token.UserID, &token.Code, &token.AccessToken)
 	if err != nil {
-		if errors.Is(err, sqlite.ErrNoRows) {
+		if errors.Is(err, db.ErrNoRows) {
 			return Token{}, ErrNotFound
 		}
 

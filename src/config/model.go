@@ -1,6 +1,6 @@
 package config
 
-type Config struct {
+type Configuration struct {
 	Todoist  Todoist
 	SQLite   SQLite
 	Server   Server
@@ -31,9 +31,7 @@ type SQLite struct {
 
 // Server contains http server configuration.
 type Server struct {
-	Host     string `koanf:"host"`
-	BasePath string `koanf:"basePath"`
-	Port     string `koanf:"port"`
+	Port string `koanf:"port"`
 }
 
 // Telegram contains configuration for communication with Telegram API.

@@ -13,9 +13,7 @@ sqlite:
   maxOpenConns: 10
 
 server:
-  host: "localhost"
-  basePath: "/bot"
-  port: ":8080"
+  port: "8080"
 
 telegram:
   # will be retrieved from env

@@ -1,27 +1,31 @@
 package main
 
 import (
-	"github.com/avobl/bot/src/config"
-	"log"
+	"context"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/avobl/bot/src/db/sqlite"
+	"github.com/avobl/bot/src/app"
+	"github.com/avobl/bot/src/web/http/server"
 )
 
 func main() {
-	conf, err := config.New("./config.yml")
-	if err != nil {
-		log.Fatalf("config: %v\n", err)
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		sig := <-signals
+		slog.WarnContext(ctx, "received signal", slog.Any("signal", sig))
+		cancel()
+	}()
+
+	if err := app.Load(ctx); err != nil {
+		slog.Error("loading app", slog.String("error", err.Error()))
+		return
 	}
 
-	db := sqlite.GetProvider(&sqlite.Config{
-		DBName:       conf.SQLite.Dbname,
-		MaxIdleConns: conf.SQLite.MaxIdleConns,
-		MaxOpenConns: conf.SQLite.MaxOpenConns,
-	})
-	if err = db.Init(); err != nil {
-		log.Fatalf("sqlite init: %v\n", err)
-	}
-
-	defer func() { _ = db.Close() }()
-
+	server.Start(ctx, cancel)
 }
