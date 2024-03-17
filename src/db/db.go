@@ -1,18 +1,25 @@
-package sqlite
+package db
 
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"log/slog"
+
+	"github.com/avobl/bot/src/config"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// ErrNoRows decouples dependency on sql package.
-var ErrNoRows = sql.ErrNoRows
+var (
+	// Connection - Initialized database connection.
+	Connection Provider
+
+	// ErrNoRows decouples dependency on sql package.
+	ErrNoRows = sql.ErrNoRows
+)
 
 // Provider is an interface that wraps the standard sql.DB interface.
 type Provider interface {
-	Init() error
-	Close() error
 	PrepareContext(ctx context.Context, query string) (Stmt, error)
 	ExecContext(ctx context.Context, query string, args ...any) (Result, error)
 	QueryContext(ctx context.Context, query string, args ...any) (Rows, error)
@@ -20,44 +27,35 @@ type Provider interface {
 	BeginTx(ctx context.Context, opts *sql.TxOptions) (Tx, error)
 }
 
-type Config struct {
-	DBName       string
-	MaxIdleConns int
-	MaxOpenConns int
-}
-
 type sqlite struct {
 	connection *sql.DB
-	config     *Config
 }
 
-// GetProvider returns not initialized Provider.
-func GetProvider(conf *Config) Provider {
-	return &sqlite{config: conf}
-}
-
-// Init initializes the database connection.
-func (sq *sqlite) Init() error {
-	db, err := sql.Open("sqlite3", sq.config.DBName)
+// Load initializes the database connection.
+func Load(ctx context.Context) error {
+	db, err := sql.Open("sqlite3", config.C.SQLite.Dbname)
 	if err != nil {
-		return err
+		return fmt.Errorf("sql open: %w", err)
 	}
+
+	go func() {
+		<-ctx.Done()
+		if err = db.Close(); err != nil {
+			slog.WarnContext(ctx, "sqlite close: %v", err)
+		}
+	}()
 
 	err = db.Ping()
 	if err != nil {
 		return err
 	}
 
-	db.SetMaxIdleConns(sq.config.MaxIdleConns)
-	db.SetMaxOpenConns(sq.config.MaxOpenConns)
+	db.SetMaxIdleConns(config.C.SQLite.MaxIdleConns)
+	db.SetMaxOpenConns(config.C.SQLite.MaxOpenConns)
 
-	sq.connection = db
+	Connection = &sqlite{connection: db}
 
 	return nil
-}
-
-func (sq *sqlite) Close() error {
-	return sq.connection.Close()
 }
 
 func (sq *sqlite) PrepareContext(ctx context.Context, query string) (Stmt, error) {

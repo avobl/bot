@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -14,13 +15,15 @@ const (
 	envPrefix = "BOT_"
 )
 
-// New returns new Config
-func New(filepath string) (*Config, error) {
+var C *Configuration
+
+// Load initializes the configuration from the file and environment variables.
+func Load(_ context.Context) error {
 	k := koanf.New(".")
 
 	// load yml config
-	if err := k.Load(file.Provider(filepath), yaml.Parser()); err != nil {
-		return nil, fmt.Errorf("loading yaml config: %w", err)
+	if err := k.Load(file.Provider("config.yml"), yaml.Parser()); err != nil {
+		return fmt.Errorf("loading yaml config: %w", err)
 	}
 
 	// load env variables and merge with yml config
@@ -29,13 +32,15 @@ func New(filepath string) (*Config, error) {
 			strings.TrimPrefix(s, envPrefix)), "_", ".", -1)
 	}), nil)
 	if err != nil {
-		return nil, fmt.Errorf("loading env config: %w", err)
+		return fmt.Errorf("loading env config: %w", err)
 	}
 
-	var conf Config
+	var conf Configuration
 	if err = k.Unmarshal("", &conf); err != nil {
-		return nil, fmt.Errorf("unmarshaling config: %w", err)
+		return fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	return &conf, nil
+	C = &conf
+
+	return nil
 }
